@@ -4,15 +4,6 @@ import glob
 import numpy as np
 from PIL import Image
 
-# image = cv2.imread('results/NLSPN_NYU_results/0000000000.png',cv2.IMREAD_UNCHANGED)
-# a = image.max()
-# b = image.min()
-# depth = ((image-b) / (a-b)*256).astype(np.uint8)
-# img_flipped = cv2.flip(depth, 1)
-# # depth = cv2.applyColorMap(depth, colormap=cv2.COLORMAP_HSV)
-# cv2.imwrite("image.png",img_flipped)
-
-
 def convertPNG(pngfile, outdir):
     # READ THE DEPTH
     im_depth = cv2.imread(pngfile)
@@ -25,34 +16,7 @@ def convertPNG(pngfile, outdir):
 
 
 class SUNRGBD_Calibration(object):
-    ''' Calibration matrices and utils
-        We define five coordinate system in SUN RGBD dataset
-
-        camera coodinate:
-            Z is forward, Y is downward, X is rightward
-
-        depth coordinate:
-            Just change axis order and flip up-down axis from camera coord
-
-        upright depth coordinate: tilted depth coordinate by Rtilt such that Z is gravity direction,
-            Z is up-axis, Y is forward, X is right-ward
-
-        upright camera coordinate:
-            Just change axis order and flip up-down axis from upright depth coordinate
-
-        image coordinate:
-            ----> x-axis (u)
-           |
-           v
-            y-axis (v)
-
-        depth points are stored in upright depth coordinate.
-        labels for 3d box (basis, centroid, size) are in upright depth coordinate.
-        2d boxes are in image coordinate
-
-        We generate frustum point cloud and 3d box in upright camera coordinate
-    '''
-
+  
     def __init__(self, calib_filepath):
         lines = [line.rstrip() for line in open(calib_filepath)]
         Rtilt = np.array([float(x) for x in lines[0].split(' ')])
@@ -166,18 +130,11 @@ class sunrgbd_object(object):
         calib_filename = os.path.join(self.calib_dir, '%06d.txt'%(idx))
         return SUNRGBD_Calibration(calib_filename)
 
-
-
 if __name__ == '__main__':
-    # convertPNG(r"C:\Users\18448\Desktop\picture\00002.png", 'image00002.png')
-    # for pngfile in glob.glob("PNG FILE"):  # C:/Users/BAMBOO/Desktop/source pics/rgbd_6/depth/*.png
-    #     convertPNG(pngfile, "TARGET FILE")  # C:/Users/BAMBOO/Desktop/source pics/rgbd_6/color
-
     import scipy.io as sio
     import matplotlib.pyplot as plt
-
-    pc = sio.loadmat(r"C:\Users\18448\Desktop\000008.mat")['instance']
-    calib= SUNRGBD_Calibration(r"C:\Users\18448\Desktop\000008.txt")
+    pc = sio.loadmat()['instance']
+    calib= SUNRGBD_Calibration()
     uv, d = calib.project_upright_depth_to_image(pc[:, 0:3])
     depth_map = np.zeros((530, 730), dtype=np.float32)
     for i in range(uv.shape[0]):
@@ -185,9 +142,3 @@ if __name__ == '__main__':
         v = int(np.round(uv[i, 1]))
         depth = d[i]
         depth_map[v-1, u-1] = depth
-    # 显示深度图
-    plt.figure()
-    plt.imshow(depth_map, cmap='gray')
-    plt.colorbar()
-    plt.title('Depth Map')
-    plt.show()
