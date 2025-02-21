@@ -2,15 +2,7 @@ import random
 import numpy as np
 import cv2
 from scipy.ndimage import gaussian_filter
-# def arugment(img, gt, hflip=True, vflip=True):
-#     if hflip and random.random() < 0.5:
-#         img = img[:, ::-1, :]
-#         gt = gt[:, ::-1, :]
-#     if vflip and random.random() < 0.5:
-#         img = img[::-1, :, :]
-#         gt = gt[::-1, :, :]
-#
-#     return img, gt
+
 def arugment(img,gt, hflip=True, rot=True):
     hflip = hflip and random.random() < 0.5
     vflip = rot and random.random() < 0.5
@@ -26,38 +18,26 @@ def arugment(img,gt, hflip=True, rot=True):
 
 def get_patch(img, gt, patch_size=16):
     th, tw = img.shape[:2]
-
-    # 计算补丁的长宽
     patch_width = patch_size
-    patch_height = int(patch_width / 4 * 3 )  # 4:3 的长宽比
-
-    # 随机选择补丁的左上角坐标
+    patch_height = int(patch_width / 4 * 3 )
     tx = random.randrange(0, (tw - patch_width))
     ty = random.randrange(0, (th - patch_height))
-
-    # 切割图像和GT以获取补丁
     patch_img = img[ty:ty + patch_height, tx:tx + patch_width, :]
     patch_gt = gt[ty:ty + patch_height, tx:tx + patch_width, :]
     box =(ty, ty + patch_height, tx, tx + patch_width)
     return patch_img, patch_gt,box
 def get_patch2(img, gt, patch_size=16):
     th, tw = img.shape[:2]
-
-    # 计算补丁的长宽
     patch_width = patch_size
-    patch_height = int(patch_width / 4 * 3)  # 4:3 的长宽比
-
-    # 调整图像大小以符合补丁的长宽比
+    patch_height = int(patch_width / 4 * 3) 
     resized_img = cv2.resize(img, (patch_width, patch_height))
     resized_gt = cv2.resize(gt, (patch_width, patch_height))
-
     box = (0, patch_height, 0, patch_width)
     return resized_img, resized_gt, box
 
 def hole_image_jit_v2(image, width, height, nums):
     """Occlusion areas do not overlap"""
     image_height, image_width = image.shape[:2]
-    # 480, 640
     rows, columns = (image_height - height + 1), (image_width - width + 1)
     optional_region = np.ones((rows * columns))
     masks = np.ones_like(image)
@@ -77,7 +57,6 @@ def hole_image_jit_v2(image, width, height, nums):
             for j in range(max(0, upper_bound), min(bottom_bound, rows)):
                 # x, y = j, i
                 optional_region[j * columns + i] = 0
-
     return image * masks
 
 
